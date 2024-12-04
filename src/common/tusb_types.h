@@ -443,10 +443,10 @@ typedef struct TU_ATTR_PACKED {
       uint8_t bitManifestationTolerant : 1;
       uint8_t bitWillDetach            : 1;
       uint8_t reserved                 : 4;
-    } bmAttributes;
+    } asBits;
 
-    uint8_t bAttributes;
-  };
+    uint8_t asByte;
+  } bmAttributes;
 
   uint16_t wDetachTimeOut;
   uint16_t wTransferSize;
