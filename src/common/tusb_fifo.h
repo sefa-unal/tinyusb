@@ -108,9 +108,9 @@ typedef struct {
   uint16_t depth           ; // max items
 
   struct TU_ATTR_PACKED {
-    uint16_t item_size : 15; // size of each item
+    uint16_t size      : 15; // size of each item
     bool overwritable  : 1 ; // ovwerwritable when full
-  };
+  } item;
 
   volatile uint16_t wr_idx ; // write index
   volatile uint16_t rd_idx ; // read index
@@ -132,8 +132,8 @@ typedef struct {
 #define TU_FIFO_INIT(_buffer, _depth, _type, _overwritable){\
   .buffer               = _buffer,                          \
   .depth                = _depth,                           \
-  .item_size            = sizeof(_type),                    \
-  .overwritable         = _overwritable,                    \
+  .item.size            = sizeof(_type),                    \
+  .item.overwritable    = _overwritable,                    \
 }
 
 #define TU_FIFO_DEF(_name, _depth, _type, _overwritable)                      \

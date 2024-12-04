@@ -803,7 +803,7 @@ bool dcd_edpt_xfer(uint8_t rhport, uint8_t ep_addr, uint8_t* buffer, uint16_t to
 // into the USB buffer!
 bool dcd_edpt_xfer_fifo(uint8_t rhport, uint8_t ep_addr, tu_fifo_t* ff, uint16_t total_bytes) {
   // USB buffers always work in bytes so to avoid unnecessary divisions we demand item_size = 1
-  TU_ASSERT(ff->item_size == 1);
+  TU_ASSERT(ff->item.size == 1);
 
   uint8_t const epnum = tu_edpt_number(ep_addr);
   uint8_t const dir = tu_edpt_dir(ep_addr);

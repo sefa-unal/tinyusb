@@ -926,7 +926,7 @@ uint16_t tud_audio_n_flush_tx_support_ff(uint8_t func_id)                 // For
   TU_VERIFY(audiod_tx_done_cb(audio->rhport, audio));
 
   n_bytes_copied -= tu_fifo_count(&audio->tx_supp_ff[0]);
-  n_bytes_copied = n_bytes_copied*audio->tx_supp_ff[0].item_size;
+  n_bytes_copied = n_bytes_copied*audio->tx_supp_ff[0].item.size;
 
   return n_bytes_copied;
 }

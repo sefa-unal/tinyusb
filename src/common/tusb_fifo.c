@@ -77,12 +77,12 @@ bool tu_fifo_config(tu_fifo_t *f, void* buffer, uint16_t depth, uint16_t item_si
   _ff_lock(f->mutex_wr);
   _ff_lock(f->mutex_rd);
 
-  f->buffer       = (uint8_t*) buffer;
-  f->depth        = depth;
-  f->item_size    = (uint16_t) (item_size & 0x7FFF);
-  f->overwritable = overwritable;
-  f->rd_idx       = 0;
-  f->wr_idx       = 0;
+  f->buffer            = (uint8_t*) buffer;
+  f->depth             = depth;
+  f->item.size         = (uint16_t) (item_size & 0x7FFF);
+  f->item.overwritable = overwritable;
+  f->rd_idx            = 0;
+  f->wr_idx            = 0;
 
   _ff_unlock(f->mutex_wr);
   _ff_unlock(f->mutex_rd);
@@ -148,7 +148,7 @@ static void _ff_pull_const_addr(void * app_buf, const uint8_t * ff_buf, uint16_t
 // send one item to fifo WITHOUT updating write pointer
 static inline void _ff_push(tu_fifo_t* f, void const * app_buf, uint16_t rel)
 {
-  memcpy(f->buffer + (rel * f->item_size), app_buf, f->item_size);
+  memcpy(f->buffer + (rel * f->item.size), app_buf, f->item.size);
 }
 
 // send n items to fifo WITHOUT updating write pointer
@@ -157,11 +157,11 @@ static void _ff_push_n(tu_fifo_t* f, void const * app_buf, uint16_t n, uint16_t 
   uint16_t const lin_count = f->depth - wr_ptr;
   uint16_t const wrap_count = n - lin_count;
 
-  uint16_t lin_bytes = lin_count * f->item_size;
-  uint16_t wrap_bytes = wrap_count * f->item_size;
+  uint16_t lin_bytes = lin_count * f->item.size;
+  uint16_t wrap_bytes = wrap_count * f->item.size;
 
   // current buffer of fifo
-  uint8_t* ff_buf = f->buffer + (wr_ptr * f->item_size);
+  uint8_t* ff_buf = f->buffer + (wr_ptr * f->item.size);
 
   switch (copy_mode)
   {
@@ -169,7 +169,7 @@ static void _ff_push_n(tu_fifo_t* f, void const * app_buf, uint16_t n, uint16_t 
       if(n <= lin_count)
       {
         // Linear only
-        memcpy(ff_buf, app_buf, n*f->item_size);
+        memcpy(ff_buf, app_buf, n*f->item.size);
       }
       else
       {
@@ -189,7 +189,7 @@ static void _ff_push_n(tu_fifo_t* f, void const * app_buf, uint16_t n, uint16_t 
       if(n <= lin_count)
       {
         // Linear only
-        _ff_push_const_addr(ff_buf, app_buf, n*f->item_size);
+        _ff_push_const_addr(ff_buf, app_buf, n*f->item.size);
       }
       else
       {
@@ -236,7 +236,7 @@ static void _ff_push_n(tu_fifo_t* f, void const * app_buf, uint16_t n, uint16_t 
 // get one item from fifo WITHOUT updating read pointer
 static inline void _ff_pull(tu_fifo_t* f, void * app_buf, uint16_t rel)
 {
-  memcpy(app_buf, f->buffer + (rel * f->item_size), f->item_size);
+  memcpy(app_buf, f->buffer + (rel * f->item.size), f->item.size);
 }
 
 // get n items from fifo WITHOUT updating read pointer
@@ -245,11 +245,11 @@ static void _ff_pull_n(tu_fifo_t* f, void* app_buf, uint16_t n, uint16_t rd_ptr,
   uint16_t const lin_count = f->depth - rd_ptr;
   uint16_t const wrap_count = n - lin_count; // only used if wrapped
 
-  uint16_t lin_bytes = lin_count * f->item_size;
-  uint16_t wrap_bytes = wrap_count * f->item_size;
+  uint16_t lin_bytes = lin_count * f->item.size;
+  uint16_t wrap_bytes = wrap_count * f->item.size;
 
   // current buffer of fifo
-  uint8_t* ff_buf = f->buffer + (rd_ptr * f->item_size);
+  uint8_t* ff_buf = f->buffer + (rd_ptr * f->item.size);
 
   switch (copy_mode)
   {
@@ -257,7 +257,7 @@ static void _ff_pull_n(tu_fifo_t* f, void* app_buf, uint16_t n, uint16_t rd_ptr,
       if ( n <= lin_count )
       {
         // Linear only
-        memcpy(app_buf, ff_buf, n*f->item_size);
+        memcpy(app_buf, ff_buf, n*f->item.size);
       }
       else
       {
@@ -275,7 +275,7 @@ static void _ff_pull_n(tu_fifo_t* f, void* app_buf, uint16_t n, uint16_t rd_ptr,
       if ( n <= lin_count )
       {
         // Linear only
-        _ff_pull_const_addr(app_buf, ff_buf, n*f->item_size);
+        _ff_pull_const_addr(app_buf, ff_buf, n*f->item.size);
       }
       else
       {
@@ -480,7 +480,7 @@ static uint16_t _tu_fifo_write_n(tu_fifo_t* f, const void * data, uint16_t n, tu
   TU_LOG(TU_FIFO_DBG, "rd = %3u, wr = %3u, count = %3u, remain = %3u, n = %3u:  ",
                        rd_idx, wr_idx, _ff_count(f->depth, wr_idx, rd_idx), _ff_remaining(f->depth, wr_idx, rd_idx), n);
 
-  if ( !f->overwritable )
+  if ( !f->item.overwritable )
   {
     // limit up to full
     uint16_t const remain = _ff_remaining(f->depth, wr_idx, rd_idx);
@@ -497,7 +497,7 @@ static uint16_t _tu_fifo_write_n(tu_fifo_t* f, const void * data, uint16_t n, tu
       // Only copy last part
       if ( copy_mode == TU_FIFO_COPY_INC )
       {
-        buf8 += (n - f->depth) * f->item_size;
+        buf8 += (n - f->depth) * f->item.size;
       }else
       {
         // TODO should read from hw fifo to discard data, however reading an odd number could
@@ -823,7 +823,7 @@ bool tu_fifo_write(tu_fifo_t* f, const void * data)
   bool ret;
   uint16_t const wr_idx = f->wr_idx;
 
-  if ( tu_fifo_full(f) && !f->overwritable )
+  if ( tu_fifo_full(f) && !f->item.overwritable )
   {
     ret = false;
   }else
@@ -921,7 +921,7 @@ bool tu_fifo_set_overwritable(tu_fifo_t *f, bool overwritable)
   _ff_lock(f->mutex_wr);
   _ff_lock(f->mutex_rd);
 
-  f->overwritable = overwritable;
+  f->item.overwritable = overwritable;
 
   _ff_unlock(f->mutex_wr);
   _ff_unlock(f->mutex_rd);
