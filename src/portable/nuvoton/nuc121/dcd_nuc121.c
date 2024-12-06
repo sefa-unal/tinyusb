@@ -528,8 +528,8 @@ void dcd_edpt0_status_complete(uint8_t rhport, tusb_control_request_t const * re
 {
   (void) rhport;
 
-  if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_DEVICE &&
-      request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD &&
+  if (request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_DEVICE &&
+      request->bmRequest.type_bit.type == TUSB_REQ_TYPE_STANDARD &&
       request->bRequest == TUSB_REQ_SET_ADDRESS )
   {
     uint8_t const dev_addr = (uint8_t) request->wValue;

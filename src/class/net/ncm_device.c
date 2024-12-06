@@ -154,7 +154,7 @@ CFG_TUD_MEM_SECTION CFG_TUD_MEM_ALIGN tu_static const ntb_parameters_t ntb_param
 //
 tu_static struct ncm_notify_t ncm_notify_connected = {
     .header = {
-        .bmRequestType_bit = {
+        .bmRequest.type_bit = {
             .recipient = TUSB_REQ_RCPT_INTERFACE,
             .type = TUSB_REQ_TYPE_CLASS,
             .direction = TUSB_DIR_IN},
@@ -166,7 +166,7 @@ tu_static struct ncm_notify_t ncm_notify_connected = {
 
 tu_static struct ncm_notify_t ncm_notify_speed_change = {
     .header = {
-        .bmRequestType_bit = {
+        .bmRequest.type_bit = {
             .recipient = TUSB_REQ_RCPT_INTERFACE,
             .type = TUSB_REQ_TYPE_CLASS,
             .direction = TUSB_DIR_IN},
@@ -843,7 +843,7 @@ bool netd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t 
     return true;
   }
 
-  switch (request->bmRequestType_bit.type) {
+  switch (request->bmRequest.type_bit.type) {
     case TUSB_REQ_TYPE_STANDARD:
 
       switch (request->bRequest) {

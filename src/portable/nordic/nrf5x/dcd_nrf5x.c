@@ -671,8 +671,8 @@ void dcd_int_handler(uint8_t rhport) {
     // nrf5x hw auto handle set address, there is no need to inform usb stack
     tusb_control_request_t const* request = (tusb_control_request_t const*) setup;
 
-    if (!(TUSB_REQ_RCPT_DEVICE == request->bmRequestType_bit.recipient &&
-          TUSB_REQ_TYPE_STANDARD == request->bmRequestType_bit.type &&
+    if (!(TUSB_REQ_RCPT_DEVICE == request->bmRequest.type_bit.recipient &&
+          TUSB_REQ_TYPE_STANDARD == request->bmRequest.type_bit.type &&
           TUSB_REQ_SET_ADDRESS == request->bRequest)) {
       dcd_event_setup_received(0, setup, true);
     }

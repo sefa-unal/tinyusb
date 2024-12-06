@@ -627,8 +627,8 @@ bool usbtmcd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
   uint8_t bTag;
 #endif
 
-  if((request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD) &&
-      (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_ENDPOINT) &&
+  if((request->bmRequest.type_bit.type == TUSB_REQ_TYPE_STANDARD) &&
+      (request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_ENDPOINT) &&
       (request->bRequest == TUSB_REQ_CLEAR_FEATURE) &&
       (request->wValue == TUSB_REQ_FEATURE_EDPT_HALT))
   {
@@ -666,7 +666,7 @@ bool usbtmcd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
   }
 
   // Otherwise, we only handle class requests.
-  if(request->bmRequestType_bit.type != TUSB_REQ_TYPE_CLASS)
+  if(request->bmRequest.type_bit.type != TUSB_REQ_TYPE_CLASS)
   {
     return false;
   }

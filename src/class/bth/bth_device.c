@@ -221,15 +221,15 @@ bool btd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t c
 
   if ( stage == CONTROL_STAGE_SETUP )
   {
-    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS &&
-        request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_DEVICE)
+    if (request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS &&
+        request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_DEVICE)
     {
       // HCI command packet addressing for single function Primary Controllers
       // also compatible with historical mode if enabled
       TU_VERIFY((request->bRequest == 0 && request->wValue == 0 && request->wIndex == 0) ||
                 (CFG_TUD_BTH_HISTORICAL_COMPATIBLE && request->bRequest == 0xe0));
     }
-    else if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+    else if (request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
     {
       if (request->bRequest == TUSB_REQ_SET_INTERFACE && _btd_itf.itf_num + 1 == request->wIndex)
       {
@@ -248,7 +248,7 @@ bool btd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t c
   else if ( stage == CONTROL_STAGE_DATA )
   {
     // Handle class request only
-    TU_VERIFY(request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS);
+    TU_VERIFY(request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS);
 
     if (tud_bt_hci_cmd_cb) tud_bt_hci_cmd_cb(&_btd_itf.hci_cmd, tu_min16(request->wLength, sizeof(_btd_itf.hci_cmd)));
   }

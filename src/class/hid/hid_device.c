@@ -260,20 +260,15 @@ uint16_t hidd_open(uint8_t rhport, tusb_desc_interface_t const *desc_itf, uint16
 // Driver response accordingly to the request and the transfer stage (setup/data/ack)
 // return false to stall control endpoint (e.g unsupported request)
 bool hidd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
-  TU_VERIFY(request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
+  TU_VERIFY(request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
 
   uint8_t const hid_itf = get_index_by_itfnum((uint8_t)request->wIndex);
   TU_VERIFY(hid_itf < CFG_TUD_HID);
 
   hidd_interface_t *p_hid = &_hidd_itf[hid_itf];
 
-  if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD) {
-    //------------- STD Request -------------//
+  if (request->bmRequest.type_bit.type == TUSB_REQ_TYPE_STANDARD) {
     if (stage == CONTROL_STAGE_SETUP) {
-      uint8_t const desc_type = tu_u16_high(request->wValue);
-      // uint8_t const desc_index = tu_u16_low (request->wValue);
-
-      if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESC_TYPE_HID) {
         TU_VERIFY(p_hid->hid_descriptor);
         TU_VERIFY(tud_control_xfer(rhport, request, (void *)(uintptr_t)p_hid->hid_descriptor, p_hid->hid_descriptor->bLength));
       } else if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESC_TYPE_REPORT) {
@@ -283,7 +278,7 @@ bool hidd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t 
         return false; // stall unsupported request
       }
     }
-  } else if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS) {
+  } else if (request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS) {
     //------------- Class Specific Request -------------//
     switch (request->bRequest) {
       case HID_REQ_CONTROL_GET_REPORT:

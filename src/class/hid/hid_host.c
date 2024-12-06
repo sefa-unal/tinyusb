@@ -192,7 +192,7 @@ static bool _hidh_set_protocol(uint8_t daddr, uint8_t itf_num, uint8_t protocol,
   TU_LOG_DRV("HID Set Protocol = %d\r\n", protocol);
 
   tusb_control_request_t const request = {
-      .bmRequestType_bit = {
+      .bmRequest.type_bit = {
           .recipient = TUSB_REQ_RCPT_INTERFACE,
           .type      = TUSB_REQ_TYPE_CLASS,
           .direction = TUSB_DIR_OUT
@@ -287,7 +287,7 @@ bool tuh_hid_set_report(uint8_t daddr, uint8_t idx, uint8_t report_id, uint8_t r
   TU_LOG_DRV("HID Set Report: id = %u, type = %u, len = %u\r\n", report_id, report_type, len);
 
   tusb_control_request_t const request = {
-      .bmRequestType_bit = {
+      .bmRequest.type_bit = {
           .recipient = TUSB_REQ_RCPT_INTERFACE,
           .type      = TUSB_REQ_TYPE_CLASS,
           .direction = TUSB_DIR_OUT
@@ -316,7 +316,7 @@ static bool _hidh_set_idle(uint8_t daddr, uint8_t itf_num, uint16_t idle_rate,
   TU_LOG_DRV("HID Set Idle \r\n");
 
   tusb_control_request_t const request = {
-      .bmRequestType_bit = {
+      .bmRequest.type_bit = {
           .recipient = TUSB_REQ_RCPT_INTERFACE,
           .type      = TUSB_REQ_TYPE_CLASS,
           .direction = TUSB_DIR_OUT

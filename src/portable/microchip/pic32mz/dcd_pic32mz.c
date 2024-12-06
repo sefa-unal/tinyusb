@@ -648,7 +648,7 @@ static void ep0_handle_int(void)
         // This means we were expecting a SETUP packet and we got one.
         setup_packet.setup_buffer[0] = USB_REGS->FIFO[0];
         setup_packet.setup_buffer[1] = USB_REGS->FIFO[0];
-        if (setup_packet.request.bmRequestType_bit.direction == TUSB_DIR_OUT)
+        if (setup_packet.request.bmRequest.type_bit.direction == TUSB_DIR_OUT)
         {
           // SVCRPR is not set yet, it will be set later when out xfer is started
           // Till then NAKs will hold incommint data

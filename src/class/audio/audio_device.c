@@ -2121,11 +2121,11 @@ static bool audiod_set_interface(uint8_t rhport, tusb_control_request_t const * 
 static bool audiod_control_complete(uint8_t rhport, tusb_control_request_t const * p_request)
 {
   // Handle audio class specific set requests
-  if(p_request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS && p_request->bmRequestType_bit.direction == TUSB_DIR_OUT)
+  if(p_request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS && p_request->bmRequest.type_bit.direction == TUSB_DIR_OUT)
   {
     uint8_t func_id;
 
-    switch (p_request->bmRequestType_bit.recipient)
+    switch (p_request->bmRequest.type_bit.recipient)
     {
       case TUSB_REQ_RCPT_INTERFACE:
       {
@@ -2176,7 +2176,7 @@ static bool audiod_control_request(uint8_t rhport, tusb_control_request_t const 
   (void) rhport;
 
   // Handle standard requests - standard set requests usually have no data stage so we also handle set requests here
-  if (p_request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD)
+  if (p_request->bmRequest.type_bit.type == TUSB_REQ_TYPE_STANDARD)
   {
     switch (p_request->bRequest)
     {
@@ -2195,13 +2195,13 @@ static bool audiod_control_request(uint8_t rhport, tusb_control_request_t const 
   }
 
   // Handle class requests
-  if (p_request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS)
+  if (p_request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS)
   {
     uint8_t itf = TU_U16_LOW(p_request->wIndex);
     uint8_t func_id;
 
     // Conduct checks which depend on the recipient
-    switch (p_request->bmRequestType_bit.recipient)
+    switch (p_request->bmRequest.type_bit.recipient)
     {
       case TUSB_REQ_RCPT_INTERFACE:
       {
@@ -2214,7 +2214,7 @@ static bool audiod_control_request(uint8_t rhport, tusb_control_request_t const 
           TU_VERIFY(audiod_verify_entity_exists(itf, entityID, &func_id));
 
           // In case we got a get request invoke callback - callback needs to answer as defined in UAC2 specification page 89 - 5. Requests
-          if (p_request->bmRequestType_bit.direction == TUSB_DIR_IN)
+          if (p_request->bmRequest.type_bit.direction == TUSB_DIR_IN)
           {
             return tud_audio_get_req_entity_cb(rhport, p_request);
           }
@@ -2225,7 +2225,7 @@ static bool audiod_control_request(uint8_t rhport, tusb_control_request_t const 
           TU_VERIFY(audiod_verify_itf_exists(itf, &func_id));
 
           // In case we got a get request invoke callback - callback needs to answer as defined in UAC2 specification page 89 - 5. Requests
-          if (p_request->bmRequestType_bit.direction == TUSB_DIR_IN)
+          if (p_request->bmRequest.type_bit.direction == TUSB_DIR_IN)
           {
             return tud_audio_get_req_itf_cb(rhport, p_request);
           }
@@ -2241,7 +2241,7 @@ static bool audiod_control_request(uint8_t rhport, tusb_control_request_t const 
         TU_VERIFY(audiod_verify_ep_exists(ep, &func_id));
 
         // In case we got a get request invoke callback - callback needs to answer as defined in UAC2 specification page 89 - 5. Requests
-        if (p_request->bmRequestType_bit.direction == TUSB_DIR_IN)
+        if (p_request->bmRequest.type_bit.direction == TUSB_DIR_IN)
         {
           return tud_audio_get_req_ep_cb(rhport, p_request);
         }
@@ -2249,7 +2249,7 @@ static bool audiod_control_request(uint8_t rhport, tusb_control_request_t const 
       break;
 
       // Unknown/Unsupported recipient
-      default: TU_LOG2("  Unsupported recipient: %d\r\n", p_request->bmRequestType_bit.recipient); TU_BREAKPOINT(); return false;
+      default: TU_LOG2("  Unsupported recipient: %d\r\n", p_request->bmRequest.type_bit.recipient); TU_BREAKPOINT(); return false;
     }
 
     // If we end here, the received request is a set request - we schedule a receive for the data stage and return true here. We handle the rest later in audiod_control_complete() once the data stage was finished
@@ -2510,14 +2510,14 @@ TU_ATTR_FAST_FUNC void audiod_sof_isr (uint8_t rhport, uint32_t frame_count)
 bool tud_audio_buffer_and_schedule_control_xfer(uint8_t rhport, tusb_control_request_t const * p_request, void* data, uint16_t len)
 {
   // Handles only sending of data not receiving
-  if (p_request->bmRequestType_bit.direction == TUSB_DIR_OUT) return false;
+  if (p_request->bmRequest.type_bit.direction == TUSB_DIR_OUT) return false;
 
   // Get corresponding driver index
   uint8_t func_id;
   uint8_t itf = TU_U16_LOW(p_request->wIndex);
 
   // Conduct checks which depend on the recipient
-  switch (p_request->bmRequestType_bit.recipient)
+  switch (p_request->bmRequest.type_bit.recipient)
   {
     case TUSB_REQ_RCPT_INTERFACE:
     {
@@ -2547,7 +2547,7 @@ bool tud_audio_buffer_and_schedule_control_xfer(uint8_t rhport, tusb_control_req
     break;
 
     // Unknown/Unsupported recipient
-    default: TU_LOG2("  Unsupported recipient: %d\r\n", p_request->bmRequestType_bit.recipient); TU_BREAKPOINT(); return false;
+    default: TU_LOG2("  Unsupported recipient: %d\r\n", p_request->bmRequest.type_bit.recipient); TU_BREAKPOINT(); return false;
   }
 
   // Crop length
@@ -2558,7 +2558,7 @@ bool tud_audio_buffer_and_schedule_control_xfer(uint8_t rhport, tusb_control_req
 
 #if CFG_TUD_AUDIO_ENABLE_EP_IN && CFG_TUD_AUDIO_EP_IN_FLOW_CONTROL
   // Find data for sampling_frequency_control
-  if (p_request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS && p_request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+  if (p_request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS && p_request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
   {
     uint8_t entityID = TU_U16_HIGH(p_request->wIndex);
     uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);

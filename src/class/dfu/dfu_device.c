@@ -213,11 +213,11 @@ uint16_t dfu_moded_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, 
 // return false to stall control endpoint (e.g unsupported request)
 bool dfu_moded_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request)
 {
-  TU_VERIFY(request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
+  TU_VERIFY(request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
 
   TU_LOG_DRV("  DFU State  : %s, Status: %s\r\n", tu_lookup_find(&_dfu_state_table, _dfu_ctx.state), tu_lookup_find(&_dfu_status_table, _dfu_ctx.status));
 
-  if ( request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD )
+  if ( request->bmRequest.type_bit.type == TUSB_REQ_TYPE_STANDARD )
   {
     // Standard request include GET/SET_INTERFACE
     switch ( request->bRequest )
@@ -243,7 +243,7 @@ bool dfu_moded_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_reque
       default: return false;
     }
   }
-  else if ( request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS )
+  else if ( request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS )
   {
     TU_LOG_DRV("  DFU Request: %s\r\n", tu_lookup_find(&_dfu_request_table, request->bRequest));
 

@@ -267,7 +267,7 @@ bool tuh_msc_write10(uint8_t dev_addr, uint8_t lun, void const* buffer, uint32_t
 // MSC interface Reset (not used now)
 bool tuh_msc_reset(uint8_t dev_addr) {
   tusb_control_request_t const new_request = {
-    .bmRequestType_bit = {
+    .bmRequest.type_bit = {
       .recipient = TUSB_REQ_RCPT_INTERFACE,
       .type      = TUSB_REQ_TYPE_CLASS,
       .direction = TUSB_DIR_OUT
@@ -408,7 +408,7 @@ bool msch_set_config(uint8_t dev_addr, uint8_t itf_num) {
   //------------- Get Max Lun -------------//
   TU_LOG_DRV("MSC Get Max Lun\r\n");
   tusb_control_request_t const request = {
-      .bmRequestType_bit = {
+      .bmRequest.type_bit = {
           .recipient = TUSB_REQ_RCPT_INTERFACE,
           .type      = TUSB_REQ_TYPE_CLASS,
           .direction = TUSB_DIR_IN

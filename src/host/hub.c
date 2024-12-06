@@ -88,7 +88,7 @@ bool hub_port_clear_feature(uint8_t hub_addr, uint8_t hub_port, uint8_t feature,
 {
   tusb_control_request_t const request =
   {
-    .bmRequestType_bit =
+    .bmRequest.type_bit =
     {
       .recipient = (hub_port == 0) ? TUSB_REQ_RCPT_DEVICE : TUSB_REQ_RCPT_OTHER,
       .type      = TUSB_REQ_TYPE_CLASS,
@@ -120,7 +120,7 @@ bool hub_port_set_feature(uint8_t hub_addr, uint8_t hub_port, uint8_t feature,
 {
   tusb_control_request_t const request =
   {
-    .bmRequestType_bit =
+    .bmRequest.type_bit =
     {
       .recipient = (hub_port == 0) ? TUSB_REQ_RCPT_DEVICE : TUSB_REQ_RCPT_OTHER,
       .type      = TUSB_REQ_TYPE_CLASS,
@@ -152,7 +152,7 @@ bool hub_port_get_status(uint8_t hub_addr, uint8_t hub_port, void* resp,
 {
   tusb_control_request_t const request =
   {
-    .bmRequestType_bit =
+    .bmRequest.type_bit =
     {
       .recipient = (hub_port == 0) ? TUSB_REQ_RCPT_DEVICE : TUSB_REQ_RCPT_OTHER,
       .type      = TUSB_REQ_TYPE_CLASS,
@@ -254,7 +254,7 @@ bool hub_set_config(uint8_t dev_addr, uint8_t itf_num)
   // Get Hub Descriptor
   tusb_control_request_t const request =
   {
-    .bmRequestType_bit =
+    .bmRequest.type_bit =
     {
       .recipient = TUSB_REQ_RCPT_DEVICE,
       .type      = TUSB_REQ_TYPE_CLASS,

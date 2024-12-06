@@ -162,7 +162,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
   // nothing to with DATA & ACK stage
   if (stage != CONTROL_STAGE_SETUP) return true;
 
-  switch (request->bmRequestType_bit.type) {
+  switch (request->bmRequest.type_bit.type) {
     case TUSB_REQ_TYPE_VENDOR:
       switch (request->bRequest) {
         case VENDOR_REQUEST_WEBUSB:

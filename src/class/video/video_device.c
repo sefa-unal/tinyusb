@@ -946,7 +946,7 @@ static int handle_video_ctl_req(uint8_t rhport, uint8_t stage,
                                 tusb_control_request_t const *request,
                                 uint_fast8_t ctl_idx)
 {
-  switch (request->bmRequestType_bit.type) {
+  switch (request->bmRequest.type_bit.type) {
     case TUSB_REQ_TYPE_STANDARD:
       return handle_video_ctl_std_req(rhport, stage, request, ctl_idx);
 
@@ -1155,7 +1155,7 @@ static int handle_video_stm_req(uint8_t rhport, uint8_t stage,
                                 tusb_control_request_t const *request,
                                 uint_fast8_t stm_idx)
 {
-  switch (request->bmRequestType_bit.type) {
+  switch (request->bmRequest.type_bit.type) {
     case TUSB_REQ_TYPE_STANDARD:
       return handle_video_stm_std_req(rhport, stage, request, stm_idx);
 
@@ -1341,7 +1341,7 @@ uint16_t videod_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uin
 // return false to stall control endpoint (e.g unsupported request)
 bool videod_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request) {
   int err;
-  TU_VERIFY(request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
+  TU_VERIFY(request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
   uint_fast8_t itfnum = tu_u16_low(request->wIndex);
   /* Identify which control interface to use */
   uint_fast8_t itf;

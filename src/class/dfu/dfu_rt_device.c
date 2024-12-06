@@ -92,10 +92,10 @@ bool dfu_rtd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
   // nothing to do with DATA or ACK stage
   if ( stage != CONTROL_STAGE_SETUP ) return true;
 
-  TU_VERIFY(request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
+  TU_VERIFY(request->bmRequest.type_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
 
   // dfu-util will try to claim the interface with SET_INTERFACE request before sending DFU request
-  if ( TUSB_REQ_TYPE_STANDARD == request->bmRequestType_bit.type &&
+  if ( TUSB_REQ_TYPE_STANDARD == request->bmRequest.type_bit.type &&
        TUSB_REQ_SET_INTERFACE == request->bRequest )
   {
     tud_control_status(rhport, request);
@@ -103,7 +103,7 @@ bool dfu_rtd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
   }
 
   // Handle class request only from here
-  TU_VERIFY(request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS);
+  TU_VERIFY(request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS);
 
   switch (request->bRequest)
   {

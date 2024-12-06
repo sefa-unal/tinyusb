@@ -884,7 +884,7 @@ static bool acm_set_control_line_state(cdch_interface_t* p_cdc, uint16_t line_st
   TU_LOG_DRV("CDC ACM Set Control Line State\r\n");
 
   tusb_control_request_t const request = {
-    .bmRequestType_bit = {
+    .bmRequest.type_bit = {
       .recipient = TUSB_REQ_RCPT_INTERFACE,
       .type      = TUSB_REQ_TYPE_CLASS,
       .direction = TUSB_DIR_OUT
@@ -914,7 +914,7 @@ static bool acm_set_line_coding(cdch_interface_t* p_cdc, cdc_line_coding_t const
   TU_LOG_DRV("CDC ACM Set Line Conding\r\n");
 
   tusb_control_request_t const request = {
-    .bmRequestType_bit = {
+    .bmRequest.type_bit = {
       .recipient = TUSB_REQ_RCPT_INTERFACE,
       .type      = TUSB_REQ_TYPE_CLASS,
       .direction = TUSB_DIR_OUT
@@ -997,7 +997,7 @@ static bool ftdi_open(uint8_t daddr, const tusb_desc_interface_t *itf_desc, uint
 // set request without data
 static bool ftdi_sio_set_request(cdch_interface_t* p_cdc, uint8_t command, uint16_t value, tuh_xfer_cb_t complete_cb, uintptr_t user_data) {
   tusb_control_request_t const request = {
-    .bmRequestType_bit = {
+    .bmRequest.type_bit = {
       .recipient = TUSB_REQ_RCPT_DEVICE,
       .type      = TUSB_REQ_TYPE_VENDOR,
       .direction = TUSB_DIR_OUT
@@ -1177,7 +1177,7 @@ static bool cp210x_open(uint8_t daddr, tusb_desc_interface_t const *itf_desc, ui
 
 static bool cp210x_set_request(cdch_interface_t* p_cdc, uint8_t command, uint16_t value, uint8_t* buffer, uint16_t length, tuh_xfer_cb_t complete_cb, uintptr_t user_data) {
   tusb_control_request_t const request = {
-    .bmRequestType_bit = {
+    .bmRequest.type_bit = {
       .recipient = TUSB_REQ_RCPT_INTERFACE,
       .type      = TUSB_REQ_TYPE_VENDOR,
       .direction = TUSB_DIR_OUT

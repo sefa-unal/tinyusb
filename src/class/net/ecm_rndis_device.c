@@ -246,7 +246,7 @@ bool netd_control_xfer_cb (uint8_t rhport, uint8_t stage, tusb_control_request_t
 {
   if ( stage == CONTROL_STAGE_SETUP )
   {
-    switch ( request->bmRequestType_bit.type )
+    switch ( request->bmRequest.type_bit.type )
     {
       case TUSB_REQ_TYPE_STANDARD:
         switch ( request->bRequest )
@@ -319,7 +319,7 @@ bool netd_control_xfer_cb (uint8_t rhport, uint8_t stage, tusb_control_request_t
         }
         else
         {
-          if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
+          if (request->bmRequest.type_bit.direction == TUSB_DIR_IN)
           {
             rndis_generic_msg_t *rndis_msg = (rndis_generic_msg_t *) ((void*) notify.rndis_buf);
             uint32_t msglen = tu_le32toh(rndis_msg->MessageLength);
@@ -340,8 +340,8 @@ bool netd_control_xfer_cb (uint8_t rhport, uint8_t stage, tusb_control_request_t
   else if ( stage == CONTROL_STAGE_DATA )
   {
     // Handle RNDIS class control OUT only
-    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS &&
-        request->bmRequestType_bit.direction == TUSB_DIR_OUT   &&
+    if (request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS &&
+        request->bmRequest.type_bit.direction == TUSB_DIR_OUT   &&
         _netd_itf.itf_num == request->wIndex)
     {
       if ( !_netd_itf.ecm_mode )

@@ -631,7 +631,7 @@ bool tuh_control_xfer (tuh_xfer_t* xfer) {
   const uint8_t rhport = usbh_get_rhport(daddr);
 
   TU_LOG_USBH("[%u:%u] %s: ", rhport, daddr,
-              (xfer->setup->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD && xfer->setup->bRequest <= TUSB_REQ_SYNCH_FRAME) ?
+              (xfer->setup->bmRequest.type_bit.type == TUSB_REQ_TYPE_STANDARD && xfer->setup->bRequest <= TUSB_REQ_SYNCH_FRAME) ?
                   tu_str_std_request[xfer->setup->bRequest] : "Class Request");
   TU_LOG_BUF_USBH(xfer->setup, 8);
 
@@ -715,7 +715,7 @@ static bool usbh_control_xfer_cb (uint8_t daddr, uint8_t ep_addr, xfer_result_t 
         if (request->wLength) {
           // DATA stage: initial data toggle is always 1
           _set_control_xfer_stage(CONTROL_STAGE_DATA);
-          TU_ASSERT( hcd_edpt_xfer(rhport, daddr, tu_edpt_addr(0, request->bmRequestType_bit.direction), _ctrl_xfer.buffer, request->wLength) );
+          TU_ASSERT( hcd_edpt_xfer(rhport, daddr, tu_edpt_addr(0, request->bmRequest.type_bit.direction), _ctrl_xfer.buffer, request->wLength) );
           return true;
         }
         TU_ATTR_FALLTHROUGH;
@@ -730,7 +730,7 @@ static bool usbh_control_xfer_cb (uint8_t daddr, uint8_t ep_addr, xfer_result_t 
 
         // ACK stage: toggle is always 1
         _set_control_xfer_stage(CONTROL_STAGE_ACK);
-        TU_ASSERT( hcd_edpt_xfer(rhport, daddr, tu_edpt_addr(0, 1 - request->bmRequestType_bit.direction), NULL, 0) );
+        TU_ASSERT( hcd_edpt_xfer(rhport, daddr, tu_edpt_addr(0, 1 - request->bmRequest.type_bit.direction), NULL, 0) );
         break;
 
       case CONTROL_STAGE_ACK: {
@@ -984,7 +984,7 @@ TU_ATTR_FAST_FUNC void hcd_event_handler(hcd_event_t const* event, bool in_isr) 
 static bool _get_descriptor(uint8_t daddr, uint8_t type, uint8_t index, uint16_t language_id, void* buffer, uint16_t len,
                             tuh_xfer_cb_t complete_cb, uintptr_t user_data) {
   tusb_control_request_t const request = {
-    .bmRequestType_bit = {
+    .bmRequest.type_bit = {
       .recipient = TUSB_REQ_RCPT_DEVICE,
       .type      = TUSB_REQ_TYPE_STANDARD,
       .direction = TUSB_DIR_IN
@@ -1060,7 +1060,7 @@ bool tuh_descriptor_get_hid_report(uint8_t daddr, uint8_t itf_num, uint8_t desc_
                                    tuh_xfer_cb_t complete_cb, uintptr_t user_data) {
   TU_LOG_USBH("HID Get Report Descriptor\r\n");
   tusb_control_request_t const request = {
-      .bmRequestType_bit = {
+      .bmRequest.type_bit = {
           .recipient = TUSB_REQ_RCPT_INTERFACE,
           .type      = TUSB_REQ_TYPE_STANDARD,
           .direction = TUSB_DIR_IN
@@ -1086,7 +1086,7 @@ bool tuh_configuration_set(uint8_t daddr, uint8_t config_num,
                            tuh_xfer_cb_t complete_cb, uintptr_t user_data) {
   TU_LOG_USBH("Set Configuration = %d\r\n", config_num);
   tusb_control_request_t const request = {
-      .bmRequestType_bit = {
+      .bmRequest.type_bit = {
           .recipient = TUSB_REQ_RCPT_DEVICE,
           .type      = TUSB_REQ_TYPE_STANDARD,
           .direction = TUSB_DIR_OUT
@@ -1112,7 +1112,7 @@ bool tuh_interface_set(uint8_t daddr, uint8_t itf_num, uint8_t itf_alt,
                        tuh_xfer_cb_t complete_cb, uintptr_t user_data) {
   TU_LOG_USBH("Set Interface %u Alternate %u\r\n", itf_num, itf_alt);
   tusb_control_request_t const request = {
-      .bmRequestType_bit = {
+      .bmRequest.type_bit = {
           .recipient = TUSB_REQ_RCPT_INTERFACE,
           .type      = TUSB_REQ_TYPE_STANDARD,
           .direction = TUSB_DIR_OUT
@@ -1299,31 +1299,7 @@ enum {
   ENUM_GET_9BYTE_CONFIG_DESC,
   ENUM_GET_FULL_CONFIG_DESC,
   ENUM_SET_CONFIG,
-  ENUM_CONFIG_DRIVER
-};
-
-static bool enum_request_set_addr(void);
-static bool _parse_configuration_descriptor (uint8_t dev_addr, tusb_desc_configuration_t const* desc_cfg);
-static void enum_full_complete(void);
-
-// process device enumeration
-static void process_enumeration(tuh_xfer_t* xfer) {
-  // Retry a few times with transfers in enumeration since device can be unstable when starting up
-  enum {
-    ATTEMPT_COUNT_MAX = 3,
-    ATTEMPT_DELAY_MS = 100
-  };
-  static uint8_t failed_count = 0;
-
-  if (XFER_RESULT_SUCCESS != xfer->result) {
-    // retry if not reaching max attempt
-    bool retry = _dev0.enumerating && (failed_count < ATTEMPT_COUNT_MAX);
-    if ( retry ) {
-      failed_count++;
-      osal_task_delay(ATTEMPT_DELAY_MS); // delay a bit
-      TU_LOG1("Enumeration attempt %u\r\n", failed_count);
-      retry = tuh_control_xfer(xfer);
-    }
+  ENUM_CONFIG_DRIVERbmRequestType_bit
 
     if (!retry) {
       enum_full_complete();
@@ -1596,7 +1572,7 @@ static bool enum_request_set_addr(void) {
   new_dev->ep0_size = desc_device->bMaxPacketSize0;
 
   tusb_control_request_t const request = {
-      .bmRequestType_bit = {
+      .bmRequest.type_bit = {
           .recipient = TUSB_REQ_RCPT_DEVICE,
           .type      = TUSB_REQ_TYPE_STANDARD,
           .direction = TUSB_DIR_OUT
