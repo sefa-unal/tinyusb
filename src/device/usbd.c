@@ -117,7 +117,7 @@ typedef struct {
     uint8_t remote_wakeup_en      : 1; // enable/disable by host
     uint8_t remote_wakeup_support : 1; // configuration descriptor's attribute
     uint8_t self_powered          : 1; // configuration descriptor's attribute
-  };
+  } flags;
   volatile uint8_t cfg_num; // current active configuration (0x00 is not configured)
   uint8_t speed;
   volatile uint8_t sof_consumer;
@@ -409,7 +409,7 @@ tusb_speed_t tud_speed_get(void) {
 }
 
 bool tud_connected(void) {
-  return _usbd_dev.connected;
+  return _usbd_dev.flags.connected;
 }
 
 bool tud_mounted(void) {
@@ -417,12 +417,12 @@ bool tud_mounted(void) {
 }
 
 bool tud_suspended(void) {
-  return _usbd_dev.suspended;
+  return _usbd_dev.flags.suspended;
 }
 
 bool tud_remote_wakeup(void) {
   // only wake up host if this feature is supported and enabled and we are suspended
-  TU_VERIFY (_usbd_dev.suspended && _usbd_dev.remote_wakeup_support && _usbd_dev.remote_wakeup_en);
+  TU_VERIFY (_usbd_dev.flags.suspended && _usbd_dev.flags.remote_wakeup_support && _usbd_dev.flags.remote_wakeup_en);
   dcd_remote_wakeup(_usbd_rhport);
   return true;
 }
@@ -608,7 +608,7 @@ void tud_task_ext(uint32_t timeout_ms, bool in_isr) {
 
         // Mark as connected after receiving 1st setup packet.
         // But it is easier to set it every time instead of wasting time to check then set
-        _usbd_dev.connected = 1;
+        _usbd_dev.flags.connected = 1;
 
         // mark both in & out control as free
         _usbd_dev.ep_status[0][TUSB_DIR_OUT].busy = 0;
@@ -652,16 +652,16 @@ void tud_task_ext(uint32_t timeout_ms, bool in_isr) {
         // NOTE: When plugging/unplugging device, the D+/D- state are unstable and
         // can accidentally meet the SUSPEND condition ( Bus Idle for 3ms ), which result in a series of event
         // e.g suspend -> resume -> unplug/plug. Skip suspend/resume if not connected
-        if (_usbd_dev.connected) {
-          TU_LOG_USBD(": Remote Wakeup = %u\r\n", _usbd_dev.remote_wakeup_en);
-          tud_suspend_cb(_usbd_dev.remote_wakeup_en);
+        if (_usbd_dev.flags.connected) {
+          TU_LOG_USBD(": Remote Wakeup = %u\r\n", _usbd_dev.flags.remote_wakeup_en);
+          tud_suspend_cb(_usbd_dev.flags.remote_wakeup_en);
         } else {
           TU_LOG_USBD(" Skipped\r\n");
         }
         break;
 
       case DCD_EVENT_RESUME:
-        if (_usbd_dev.connected) {
+        if (_usbd_dev.flags.connected) {
           TU_LOG_USBD("\r\n");
           tud_resume_cb();
         } else {
@@ -751,7 +751,7 @@ static bool process_control_request(uint8_t rhport, tusb_control_request_t const
           usbd_control_set_request(p_request); // set request since DCD has no access to tud_control_status() API
           dcd_set_address(rhport, (uint8_t) p_request->wValue);
           // skip tud_control_status()
-          _usbd_dev.addressed = 1;
+          _usbd_dev.flags.addressed = 1;
         break;
 
         case TUSB_REQ_GET_CONFIGURATION: {
@@ -812,7 +812,7 @@ static bool process_control_request(uint8_t rhport, tusb_control_request_t const
             case TUSB_REQ_FEATURE_REMOTE_WAKEUP:
               TU_LOG_USBD("    Enable Remote Wakeup\r\n");
               // Host may enable remote wake up before suspending especially HID device
-              _usbd_dev.remote_wakeup_en = true;
+              _usbd_dev.flags.remote_wakeup_en = true;
               tud_control_status(rhport, p_request);
             break;
 
@@ -842,7 +842,7 @@ static bool process_control_request(uint8_t rhport, tusb_control_request_t const
           TU_LOG_USBD("    Disable Remote Wakeup\r\n");
 
           // Host may disable remote wake up after resuming
-          _usbd_dev.remote_wakeup_en = false;
+          _usbd_dev.flags.remote_wakeup_en = false;
           tud_control_status(rhport, p_request);
         break;
 
@@ -850,7 +850,7 @@ static bool process_control_request(uint8_t rhport, tusb_control_request_t const
           // Device status bit mask
           // - Bit 0: Self Powered
           // - Bit 1: Remote Wakeup enabled
-          uint16_t status = (uint16_t) ((_usbd_dev.self_powered ? 1u : 0u) | (_usbd_dev.remote_wakeup_en ? 2u : 0u));
+          uint16_t status = (uint16_t) ((_usbd_dev.flags.self_powered ? 1u : 0u) | (_usbd_dev.flags.remote_wakeup_en ? 2u : 0u));
           tud_control_xfer(rhport, p_request, &status, 2);
           break;
         }
@@ -969,8 +969,8 @@ static bool process_set_config(uint8_t rhport, uint8_t cfg_num)
   TU_ASSERT(desc_cfg != NULL && desc_cfg->bDescriptorType == TUSB_DESC_CONFIGURATION);
 
   // Parse configuration descriptor
-  _usbd_dev.remote_wakeup_support = (desc_cfg->bmAttributes & TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP) ? 1u : 0u;
-  _usbd_dev.self_powered          = (desc_cfg->bmAttributes & TUSB_DESC_CONFIG_ATT_SELF_POWERED ) ? 1u : 0u;
+  _usbd_dev.flags.remote_wakeup_support = (desc_cfg->bmAttributes & TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP) ? 1u : 0u;
+  _usbd_dev.flags.self_powered          = (desc_cfg->bmAttributes & TUSB_DESC_CONFIG_ATT_SELF_POWERED ) ? 1u : 0u;
 
   // Parse interface descriptor
   uint8_t const * p_desc   = ((uint8_t const*) desc_cfg) + sizeof(tusb_desc_configuration_t);
@@ -1070,7 +1070,7 @@ static bool process_get_descriptor(uint8_t rhport, tusb_control_request_t const 
 
       // Only response with exactly 1 Packet if: not addressed and host requested more data than device descriptor has.
       // This only happens with the very first get device descriptor and EP0 size = 8 or 16.
-      if ((CFG_TUD_ENDPOINT0_SIZE < sizeof(tusb_desc_device_t)) && !_usbd_dev.addressed &&
+      if ((CFG_TUD_ENDPOINT0_SIZE < sizeof(tusb_desc_device_t)) && !_usbd_dev.flags.addressed &&
           ((tusb_control_request_t const*) p_request)->wLength > sizeof(tusb_desc_device_t)) {
         // Hack here: we modify the request length to prevent usbd_control response with zlp
         // since we are responding with 1 packet & less data than wLength.
@@ -1152,10 +1152,10 @@ TU_ATTR_FAST_FUNC void dcd_event_handler(dcd_event_t const* event, bool in_isr) 
   bool send = false;
   switch (event->event_id) {
     case DCD_EVENT_UNPLUGGED:
-      _usbd_dev.connected = 0;
-      _usbd_dev.addressed = 0;
+      _usbd_dev.flags.connected = 0;
+      _usbd_dev.flags.addressed = 0;
       _usbd_dev.cfg_num = 0;
-      _usbd_dev.suspended = 0;
+      _usbd_dev.flags.suspended = 0;
       send = true;
       break;
 
@@ -1164,16 +1164,16 @@ TU_ATTR_FAST_FUNC void dcd_event_handler(dcd_event_t const* event, bool in_isr) 
       // can accidentally meet the SUSPEND condition ( Bus Idle for 3ms ).
       // In addition, some MCUs such as SAMD or boards that haven no VBUS detection cannot distinguish
       // suspended vs disconnected. We will skip handling SUSPEND/RESUME event if not currently connected
-      if (_usbd_dev.connected) {
-        _usbd_dev.suspended = 1;
+      if (_usbd_dev.flags.connected) {
+        _usbd_dev.flags.suspended = 1;
         send = true;
       }
       break;
 
     case DCD_EVENT_RESUME:
       // skip event if not connected (especially required for SAMD)
-      if (_usbd_dev.connected) {
-        _usbd_dev.suspended = 0;
+      if (_usbd_dev.flags.connected) {
+        _usbd_dev.flags.suspended = 0;
         send = true;
       }
       break;
@@ -1189,8 +1189,8 @@ TU_ATTR_FAST_FUNC void dcd_event_handler(dcd_event_t const* event, bool in_isr) 
 
       // Some MCUs after running dcd_remote_wakeup() does not have way to detect the end of remote wakeup
       // which last 1-15 ms. DCD can use SOF as a clear indicator that bus is back to operational
-      if (_usbd_dev.suspended) {
-        _usbd_dev.suspended = 0;
+      if (_usbd_dev.flags.suspended) {
+        _usbd_dev.flags.suspended = 0;
 
         dcd_event_t const event_resume = {.rhport = event->rhport, .event_id = DCD_EVENT_RESUME};
         queue_event(&event_resume, in_isr);
