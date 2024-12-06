@@ -709,25 +709,25 @@ static bool invoke_class_control(uint8_t rhport, usbd_class_driver_t const * dri
 // Returns false if unable to complete the request, causing caller to stall control endpoints.
 static bool process_control_request(uint8_t rhport, tusb_control_request_t const * p_request) {
   usbd_control_set_complete_callback(NULL);
-  TU_ASSERT(p_request->bmRequestType_bit.type < TUSB_REQ_TYPE_INVALID);
+  TU_ASSERT(p_request->bmRequest.type_bit.type < TUSB_REQ_TYPE_INVALID);
 
   // Vendor request
-  if ( p_request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR ) {
+  if ( p_request->bmRequest.type_bit.type == TUSB_REQ_TYPE_VENDOR ) {
     usbd_control_set_complete_callback(tud_vendor_control_xfer_cb);
     return tud_vendor_control_xfer_cb(rhport, CONTROL_STAGE_SETUP, p_request);
   }
 
 #if CFG_TUSB_DEBUG >= CFG_TUD_LOG_LEVEL
-  if (TUSB_REQ_TYPE_STANDARD == p_request->bmRequestType_bit.type && p_request->bRequest <= TUSB_REQ_SYNCH_FRAME) {
+  if (TUSB_REQ_TYPE_STANDARD == p_request->bmRequest.type_bit.type && p_request->bRequest <= TUSB_REQ_SYNCH_FRAME) {
     TU_LOG_USBD("  %s", tu_str_std_request[p_request->bRequest]);
     if (TUSB_REQ_GET_DESCRIPTOR != p_request->bRequest) TU_LOG_USBD("\r\n");
   }
 #endif
 
-  switch ( p_request->bmRequestType_bit.recipient ) {
+  switch ( p_request->bmRequest.type_bit.recipient ) {
     //------------- Device Requests e.g in enumeration -------------//
     case TUSB_REQ_RCPT_DEVICE:
-      if ( TUSB_REQ_TYPE_CLASS == p_request->bmRequestType_bit.type ) {
+      if ( TUSB_REQ_TYPE_CLASS == p_request->bmRequest.type_bit.type ) {
         uint8_t const itf = tu_u16_low(p_request->wIndex);
         TU_VERIFY(itf < TU_ARRAY_SIZE(_usbd_dev.itf2drv));
 
@@ -738,7 +738,7 @@ static bool process_control_request(uint8_t rhport, tusb_control_request_t const
         return invoke_class_control(rhport, driver, p_request);
       }
 
-      if ( TUSB_REQ_TYPE_STANDARD != p_request->bmRequestType_bit.type ) {
+      if ( TUSB_REQ_TYPE_STANDARD != p_request->bmRequest.type_bit.type ) {
         // Non-standard request is not supported
         TU_BREAKPOINT();
         return false;
@@ -874,7 +874,7 @@ static bool process_control_request(uint8_t rhport, tusb_control_request_t const
       if ( !invoke_class_control(rhport, driver, p_request) ) {
         // For GET_INTERFACE and SET_INTERFACE, it is mandatory to respond even if the class
         // driver doesn't use alternate settings or implement this
-        TU_VERIFY(TUSB_REQ_TYPE_STANDARD == p_request->bmRequestType_bit.type);
+        TU_VERIFY(TUSB_REQ_TYPE_STANDARD == p_request->bmRequest.type_bit.type);
 
         switch(p_request->bRequest) {
           case TUSB_REQ_GET_INTERFACE:
@@ -905,7 +905,7 @@ static bool process_control_request(uint8_t rhport, tusb_control_request_t const
       TU_ASSERT(ep_num < TU_ARRAY_SIZE(_usbd_dev.ep2drv) );
       usbd_class_driver_t const * driver = get_driver(_usbd_dev.ep2drv[ep_num][ep_dir]);
 
-      if ( TUSB_REQ_TYPE_STANDARD != p_request->bmRequestType_bit.type ) {
+      if ( TUSB_REQ_TYPE_STANDARD != p_request->bmRequest.type_bit.type ) {
         // Forward class request to its driver
         TU_VERIFY(driver);
         return invoke_class_control(rhport, driver, p_request);

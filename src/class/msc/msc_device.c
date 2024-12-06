@@ -313,9 +313,9 @@ bool mscd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t 
   mscd_interface_t* p_msc = &_mscd_itf;
 
   // Clear Endpoint Feature (stall) for recovery
-  if ( TUSB_REQ_TYPE_STANDARD     == request->bmRequestType_bit.type      &&
-       TUSB_REQ_RCPT_ENDPOINT     == request->bmRequestType_bit.recipient &&
-       TUSB_REQ_CLEAR_FEATURE     == request->bRequest                    &&
+  if ( TUSB_REQ_TYPE_STANDARD     == request->bmRequest.type_bit.type      &&
+       TUSB_REQ_RCPT_ENDPOINT     == request->bmRequest.type_bit.recipient &&
+       TUSB_REQ_CLEAR_FEATURE     == request->bRequest                     &&
        TUSB_REQ_FEATURE_EDPT_HALT == request->wValue )
   {
     uint8_t const ep_addr = tu_u16_low(request->wIndex);
@@ -354,7 +354,7 @@ bool mscd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t 
   }
 
   // From this point only handle class request only
-  TU_VERIFY(request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS);
+  TU_VERIFY(request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS);
 
   switch ( request->bRequest )
   {

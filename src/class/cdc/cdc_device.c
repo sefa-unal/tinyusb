@@ -354,7 +354,7 @@ uint16_t cdcd_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint1
 // return false to stall control endpoint (e.g unsupported request)
 bool cdcd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const* request) {
   // Handle class request only
-  TU_VERIFY(request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS);
+  TU_VERIFY(request->bmRequest.type_bit.type == TUSB_REQ_TYPE_CLASS);
 
   uint8_t itf = 0;
   cdcd_interface_t* p_cdc = _cdcd_itf;

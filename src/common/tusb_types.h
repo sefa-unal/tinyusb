@@ -463,10 +463,10 @@ typedef struct TU_ATTR_PACKED {
       uint8_t recipient :  5; ///< Recipient type tusb_request_recipient_t.
       uint8_t type      :  2; ///< Request type tusb_request_type_t.
       uint8_t direction :  1; ///< Direction type. tusb_dir_t
-    } bmRequestType_bit;
+    } type_bit;
 
-    uint8_t bmRequestType;
-  };
+    uint8_t type;
+  } bmRequest;
 
   uint8_t  bRequest;
   uint16_t wValue;

@@ -235,7 +235,7 @@ typedef struct TU_ATTR_PACKED
 #define GAMEPAD_BUTTON_27 TU_BIT(27)
 #define GAMEPAD_BUTTON_28 TU_BIT(28)
 #define GAMEPAD_BUTTON_29 TU_BIT(29)
-#define GAMEPAD_BUTTON_29 TU_BIT(30)
+#define GAMEPAD_BUTTON_30 TU_BIT(30)
 #define GAMEPAD_BUTTON_31 TU_BIT(31)
 
 /// Standard Gamepad Buttons Naming from Linux input event codes

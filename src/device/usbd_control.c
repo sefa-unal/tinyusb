@@ -73,7 +73,7 @@ tu_static uint8_t _usbd_ctrl_buf[CFG_TUD_ENDPOINT0_SIZE];
 // Queue ZLP status transaction
 static inline bool _status_stage_xact(uint8_t rhport, tusb_control_request_t const* request) {
   // Opposite to endpoint in Data Phase
-  uint8_t const ep_addr = request->bmRequestType_bit.direction ? EDPT_CTRL_OUT : EDPT_CTRL_IN;
+  uint8_t const ep_addr = request->bmRequest.type_bit.direction ? EDPT_CTRL_OUT : EDPT_CTRL_IN;
   return usbd_edpt_xfer(rhport, ep_addr, NULL, 0);
 }
 
@@ -96,7 +96,7 @@ static bool _data_stage_xact(uint8_t rhport) {
 
   uint8_t ep_addr = EDPT_CTRL_OUT;
 
-  if (_ctrl_xfer.request.bmRequestType_bit.direction == TUSB_DIR_IN) {
+  if (_ctrl_xfer.request.bmRequest.type_bit.direction == TUSB_DIR_IN) {
     ep_addr = EDPT_CTRL_IN;
     if (xact_len) {
       TU_VERIFY(0 == tu_memcpy_s(_usbd_ctrl_buf, CFG_TUD_ENDPOINT0_SIZE, _ctrl_xfer.buffer, xact_len));
@@ -163,7 +163,7 @@ bool usbd_control_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
   (void) result;
 
   // Endpoint Address is opposite to direction bit, this is Status Stage complete event
-  if (tu_edpt_dir(ep_addr) != _ctrl_xfer.request.bmRequestType_bit.direction) {
+  if (tu_edpt_dir(ep_addr) != _ctrl_xfer.request.bmRequest.type_bit.direction) {
     TU_ASSERT(0 == xferred_bytes);
 
     // invoke optional dcd hook if available
@@ -177,7 +177,7 @@ bool usbd_control_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
     return true;
   }
 
-  if (_ctrl_xfer.request.bmRequestType_bit.direction == TUSB_DIR_OUT) {
+  if (_ctrl_xfer.request.bmRequest.type_bit.direction == TUSB_DIR_OUT) {
     TU_VERIFY(_ctrl_xfer.buffer);
     memcpy(_ctrl_xfer.buffer, _usbd_ctrl_buf, xferred_bytes);
     TU_LOG_MEM(CFG_TUD_LOG_LEVEL, _usbd_ctrl_buf, xferred_bytes, 2);
