@@ -352,7 +352,7 @@ static void bus_reset(uint8_t rhport) {
   _allocated_fifo_words_tx = 16;
 
   // Control IN uses FIFO 0 with 64 bytes ( 16 32-bit word )
-  dwc2->dieptxf0 = (16 << DIEPTXF0_TX0FD_Pos) | (_dwc2_controller[rhport].ep_fifo_size / 4 - _allocated_fifo_words_tx);
+  dwc2->fifo_cfg.dieptxf0 = (16 << DIEPTXF0_TX0FD_Pos) | (_dwc2_controller[rhport].ep_fifo_size / 4 - _allocated_fifo_words_tx);
 
   // Fixed control EP0 size to 64 bytes
   dwc2->epin[0].diepctl &= ~(0x03 << DIEPCTL_MPSIZ_Pos);
@@ -455,7 +455,7 @@ static bool phy_hs_supported(dwc2_regs_t* dwc2) {
 #elif !TUD_OPT_HIGH_SPEED
   return false;
 #else
-  return dwc2->ghwcfg2_bm.hs_phy_type != HS_PHY_TYPE_NONE;
+  return dwc2->ghwcfg2.fields..hs_phy_type != HS_PHY_TYPE_NONE;
 #endif
 }
 
@@ -489,7 +489,7 @@ static void phy_hs_init(dwc2_regs_t* dwc2) {
   // De-select FS PHY
   gusbcfg &= ~GUSBCFG_PHYSEL;
 
-  if (dwc2->ghwcfg2_bm.hs_phy_type == HS_PHY_TYPE_ULPI) {
+  if (dwc2->ghwcfg2.fields.hs_phy_type == HS_PHY_TYPE_ULPI) {
     TU_LOG(DWC2_DEBUG, "Highspeed ULPI PHY init\r\n");
 
     // Select ULPI
@@ -510,14 +510,14 @@ static void phy_hs_init(dwc2_regs_t* dwc2) {
     gusbcfg &= ~(GUSBCFG_ULPI_UTMI_SEL | GUSBCFG_PHYIF16);
 
     // Set 16-bit interface if supported
-    if (dwc2->ghwcfg4_bm.utmi_phy_data_width) gusbcfg |= GUSBCFG_PHYIF16;
+    if (dwc2->ghwcfg4.fields.utmi_phy_data_width) gusbcfg |= GUSBCFG_PHYIF16;
   }
 
   // Apply config
   dwc2->gusbcfg = gusbcfg;
 
   // mcu specific phy init
-  dwc2_phy_init(dwc2, dwc2->ghwcfg2_bm.hs_phy_type);
+  dwc2_phy_init(dwc2, dwc2->ghwcfg2.fields.hs_phy_type);
 
   // Reset core after selecting PHY
   reset_core(dwc2);
@@ -526,11 +526,11 @@ static void phy_hs_init(dwc2_regs_t* dwc2) {
   // - 9 if using 8-bit PHY interface
   // - 5 if using 16-bit PHY interface
   gusbcfg &= ~GUSBCFG_TRDT_Msk;
-  gusbcfg |= (dwc2->ghwcfg4_bm.utmi_phy_data_width ? 5u : 9u) << GUSBCFG_TRDT_Pos;
+  gusbcfg |= (dwc2->ghwcfg4.fields.utmi_phy_data_width ? 5u : 9u) << GUSBCFG_TRDT_Pos;
   dwc2->gusbcfg = gusbcfg;
 
   // MCU specific PHY update post reset
-  dwc2_phy_update(dwc2, dwc2->ghwcfg2_bm.hs_phy_type);
+  dwc2_phy_update(dwc2, dwc2->ghwcfg2.fields.hs_phy_type);
 
   // Set max speed
   uint32_t dcfg = dwc2->dcfg;
@@ -539,7 +539,7 @@ static void phy_hs_init(dwc2_regs_t* dwc2) {
 
   // XCVRDLY: transceiver delay between xcvr_sel and txvalid during device chirp is required
   // when using with some PHYs such as USB334x (USB3341, USB3343, USB3346, USB3347)
-  if (dwc2->ghwcfg2_bm.hs_phy_type == HS_PHY_TYPE_ULPI) dcfg |= DCFG_XCVRDLY;
+  if (dwc2->ghwcfg2.fields.hs_phy_type == HS_PHY_TYPE_ULPI) dcfg |= DCFG_XCVRDLY;
 
   dwc2->dcfg = dcfg;
 }

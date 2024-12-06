@@ -139,7 +139,7 @@ static void bus_reset(void)
   USB0.grxfsiz = 52;
 
   // Control IN uses FIFO 0 with 64 bytes ( 16 32-bit word )
-  USB0.gnptxfsiz = (16 << USB_NPTXFDEP_S) | (USB0.grxfsiz & 0x0000ffffUL);
+  USB0.fifo_cfg.gnptxfsiz = (16 << USB_NPTXFDEP_S) | (USB0.grxfsiz & 0x0000ffffUL);
 
   // Ready to receive SETUP packet
   USB0.out_ep_reg[0].doeptsiz |= USB_SUPCNT0_M;

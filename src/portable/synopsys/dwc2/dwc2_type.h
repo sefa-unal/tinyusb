@@ -217,29 +217,29 @@ typedef struct
 union {
   volatile uint32_t dieptxf0;         // 028 EP0 Tx FIFO Size
   volatile uint32_t gnptxfsiz;        // 028 Non-periodic Transmit FIFO Size
-};
+} fifo_cfg;
   volatile uint32_t gnptxsts;         // 02c Non-periodic Transmit FIFO/Queue Status
   volatile uint32_t gi2cctl;          // 030 I2C Address
   volatile uint32_t gpvndctl;         // 034 PHY Vendor Control
 union {
   volatile uint32_t ggpio;            // 038 General Purpose IO
   volatile uint32_t stm32_gccfg;      // 038 STM32 General Core Configuration
-};
+} stm32_config;
   volatile uint32_t guid;             // 03C User (Application programmable) ID
   volatile uint32_t gsnpsid;          // 040 Synopsys ID + Release version
   volatile uint32_t ghwcfg1;          // 044 User Hardware Configuration1: endpoint dir (2 bit per ep)
 union {
-  volatile uint32_t ghwcfg2;          // 048 User Hardware Configuration2
-  dwc2_ghwcfg2_t    ghwcfg2_bm;
-};
+  volatile uint32_t value;          // 048 User Hardware Configuration2
+  dwc2_ghwcfg2_t    fields;
+} ghwcfg2;
 union {
-  volatile uint32_t ghwcfg3;          // 04C User Hardware Configuration3
-  dwc2_ghwcfg3_t    ghwcfg3_bm;
-};
+  volatile uint32_t value;          // 04C User Hardware Configuration3
+  dwc2_ghwcfg3_t    fields;
+} ghwcfg3;
 union {
-  volatile uint32_t ghwcfg4;          // 050 User Hardware Configuration4
-  dwc2_ghwcfg4_t    ghwcfg4_bm;
-};
+  volatile uint32_t value;          // 050 User Hardware Configuration4
+  dwc2_ghwcfg4_t    fields;
+} ghwcfg4;
   volatile uint32_t glpmcfg;          // 054 Core LPM Configuration
   volatile uint32_t gpwrdn;           // 058 Power Down
   volatile uint32_t gdfifocfg;        // 05C DFIFO Software Configuration

@@ -144,7 +144,7 @@ TU_ATTR_ALWAYS_INLINE static inline void dwc2_remote_wakeup_delay(void) {
 static inline void dwc2_phy_init(dwc2_regs_t* dwc2, uint8_t hs_phy_type) {
   if (hs_phy_type == HS_PHY_TYPE_NONE) {
     // Enable on-chip FS PHY
-    dwc2->stm32_gccfg |= STM32_GCCFG_PWRDWN;
+    dwc2->stm32_config.stm32_gccfg |= STM32_GCCFG_PWRDWN;
 
     // https://community.st.com/t5/stm32cubemx-mcus/why-stm32h743-usb-fs-doesn-t-work-if-freertos-tickless-idle/m-p/349480#M18867
     // H7 running on full-speed phy need to disable ULPI clock in sleep mode.
@@ -171,14 +171,14 @@ static inline void dwc2_phy_init(dwc2_regs_t* dwc2, uint8_t hs_phy_type) {
   } else {
 #if CFG_TUSB_MCU != OPT_MCU_STM32U5
     // Disable FS PHY, TODO on U5A5 (dwc2 4.11a) 16th bit is 'Host CDP behavior enable'
-    dwc2->stm32_gccfg &= ~STM32_GCCFG_PWRDWN;
+    dwc2->stm32_config.stm32_gccfg &= ~STM32_GCCFG_PWRDWN;
 #endif
 
     // Enable on-chip HS PHY
     if (hs_phy_type == HS_PHY_TYPE_UTMI || hs_phy_type == HS_PHY_TYPE_UTMI_ULPI) {
       #ifdef USB_HS_PHYC
       // Enable UTMI HS PHY
-      dwc2->stm32_gccfg |= STM32_GCCFG_PHYHSEN;
+      dwc2->stm32_config.stm32_gccfg |= STM32_GCCFG_PHYHSEN;
 
       // Enable LDO
       USB_HS_PHYC->USB_HS_PHYC_LDO |= USB_HS_PHYC_LDO_ENABLE;
