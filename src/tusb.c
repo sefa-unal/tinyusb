@@ -218,7 +218,7 @@ bool tu_edpt_stream_init(tu_edpt_stream_t* s, bool is_host, bool is_tx, bool ove
                          void* ff_buf, uint16_t ff_bufsize, uint8_t* ep_buf, uint16_t ep_bufsize) {
   (void) is_tx;
 
-  s->is_host = is_host;
+  s->attr.is_host = is_host;
   tu_fifo_config(&s->ff, ff_buf, ff_bufsize, 1, overwritable);
 
   #if OSAL_MUTEX_REQUIRED
@@ -244,7 +244,7 @@ bool tu_edpt_stream_deinit(tu_edpt_stream_t* s) {
 }
 
 TU_ATTR_ALWAYS_INLINE static inline bool stream_claim(uint8_t hwid, tu_edpt_stream_t* s) {
-  if (s->is_host) {
+  if (s->attr.is_host) {
     #if CFG_TUH_ENABLED
     return usbh_edpt_claim(hwid, s->ep_addr);
     #endif
@@ -257,7 +257,7 @@ TU_ATTR_ALWAYS_INLINE static inline bool stream_claim(uint8_t hwid, tu_edpt_stre
 }
 
 TU_ATTR_ALWAYS_INLINE static inline bool stream_xfer(uint8_t hwid, tu_edpt_stream_t* s, uint16_t count) {
-  if (s->is_host) {
+  if (s->attr.is_host) {
     #if CFG_TUH_ENABLED
     return usbh_edpt_xfer(hwid, s->ep_addr, count ? s->ep_buf : NULL, count);
     #endif
@@ -270,7 +270,7 @@ TU_ATTR_ALWAYS_INLINE static inline bool stream_xfer(uint8_t hwid, tu_edpt_strea
 }
 
 TU_ATTR_ALWAYS_INLINE static inline bool stream_release(uint8_t hwid, tu_edpt_stream_t* s) {
-  if (s->is_host) {
+  if (s->attr.is_host) {
     #if CFG_TUH_ENABLED
     return usbh_edpt_release(hwid, s->ep_addr);
     #endif
@@ -287,7 +287,7 @@ TU_ATTR_ALWAYS_INLINE static inline bool stream_release(uint8_t hwid, tu_edpt_st
 //--------------------------------------------------------------------+
 bool tu_edpt_stream_write_zlp_if_needed(uint8_t hwid, tu_edpt_stream_t* s, uint32_t last_xferred_bytes) {
   // ZLP condition: no pending data, last transferred bytes is multiple of packet size
-  const uint16_t mps = s->is_mps512 ? TUSB_EPSIZE_BULK_HS : TUSB_EPSIZE_BULK_FS;
+  const uint16_t mps = s->attr.is_mps512 ? TUSB_EPSIZE_BULK_HS : TUSB_EPSIZE_BULK_FS;
   TU_VERIFY(!tu_fifo_count(&s->ff) && last_xferred_bytes && (0 == (last_xferred_bytes & (mps - 1))));
   TU_VERIFY(stream_claim(hwid, s));
   TU_ASSERT(stream_xfer(hwid, s, 0));
@@ -329,7 +329,7 @@ uint32_t tu_edpt_stream_write(uint8_t hwid, tu_edpt_stream_t* s, void const* buf
 
     // flush if fifo has more than packet size or
     // in rare case: fifo depth is configured too small (which never reach packet size)
-    const uint16_t mps = s->is_mps512 ? TUSB_EPSIZE_BULK_HS : TUSB_EPSIZE_BULK_FS;
+    const uint16_t mps = s->attr.is_mps512 ? TUSB_EPSIZE_BULK_HS : TUSB_EPSIZE_BULK_FS;
     if ((tu_fifo_count(&s->ff) >= mps) || (tu_fifo_depth(&s->ff) < mps)) {
       tu_edpt_stream_write_xfer(hwid, s);
     }
@@ -342,7 +342,7 @@ uint32_t tu_edpt_stream_write_available(uint8_t hwid, tu_edpt_stream_t* s) {
     return (uint32_t) tu_fifo_remaining(&s->ff);
   } else {
     bool is_busy = true;
-    if (s->is_host) {
+    if (s->attr.is_host) {
       #if CFG_TUH_ENABLED
       is_busy = usbh_edpt_busy(hwid, s->ep_addr);
       #endif
@@ -365,7 +365,7 @@ uint32_t tu_edpt_stream_read_xfer(uint8_t hwid, tu_edpt_stream_t* s) {
     TU_ASSERT(stream_xfer(hwid, s, s->ep_bufsize), 0);
     return s->ep_bufsize;
   } else {
-    const uint16_t mps = s->is_mps512 ? TUSB_EPSIZE_BULK_HS : TUSB_EPSIZE_BULK_FS;
+    const uint16_t mps = s->attr.is_mps512 ? TUSB_EPSIZE_BULK_HS : TUSB_EPSIZE_BULK_FS;
     uint16_t available = tu_fifo_remaining(&s->ff);
 
     // Prepare for incoming data but only allow what we can store in the ring buffer.

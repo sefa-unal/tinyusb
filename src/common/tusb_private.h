@@ -44,7 +44,7 @@ typedef struct {
   struct TU_ATTR_PACKED  {
     uint8_t is_host   : 1; // 1: host, 0: device
     uint8_t is_mps512 : 1; // 1: 512, 0: 64 since stream is used for Bulk only
-  };
+  } attr;
   uint8_t ep_addr;
   uint16_t ep_bufsize;
 
@@ -91,7 +91,7 @@ TU_ATTR_ALWAYS_INLINE static inline
 void tu_edpt_stream_open(tu_edpt_stream_t* s, tusb_desc_endpoint_t const *desc_ep) {
   tu_fifo_clear(&s->ff);
   s->ep_addr = desc_ep->bEndpointAddress;
-  s->is_mps512 = (tu_edpt_packet_size(desc_ep) == 512) ? 1 : 0;
+  s->attr.is_mps512 = (tu_edpt_packet_size(desc_ep) == 512) ? 1 : 0;
 }
 
 TU_ATTR_ALWAYS_INLINE static inline
