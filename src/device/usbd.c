@@ -429,9 +429,6 @@ bool tud_remote_wakeup(void) {
 
 bool tud_disconnect(void) {
   dcd_disconnect(_usbd_rhport);
-  /* This is a workaround to be able to call tud_init() again successfully */
-  /* https://github.com/hathach/tinyusb/issues/428#issuecomment-2268725798 */
-  _usbd_rhport = RHPORT_INVALID;
   return true;
 }
 
