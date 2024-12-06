@@ -82,7 +82,7 @@ typedef struct TU_ATTR_ALIGNED(4) {
       void (*func) (void*);
       void* param;
     }func_call;
-  };
+  } fields;
 } dcd_event_t;
 
 //TU_VERIFY_STATIC(sizeof(dcd_event_t) <= 12, "size is not correct");
@@ -201,14 +201,14 @@ TU_ATTR_ALWAYS_INLINE static inline void dcd_event_bus_signal (uint8_t rhport, d
 // helper to send bus reset event
 TU_ATTR_ALWAYS_INLINE static inline  void dcd_event_bus_reset (uint8_t rhport, tusb_speed_t speed, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_BUS_RESET };
-  event.bus_reset.speed = speed;
+  event.fields.bus_reset.speed = speed;
   dcd_event_handler(&event, in_isr);
 }
 
 // helper to send setup received
 TU_ATTR_ALWAYS_INLINE static inline void dcd_event_setup_received(uint8_t rhport, uint8_t const * setup, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_SETUP_RECEIVED };
-  memcpy(&event.setup_received, setup, sizeof(tusb_control_request_t));
+  memcpy(&event.fields.setup_received, setup, sizeof(tusb_control_request_t));
 
   dcd_event_handler(&event, in_isr);
 }
@@ -217,16 +217,16 @@ TU_ATTR_ALWAYS_INLINE static inline void dcd_event_setup_received(uint8_t rhport
 TU_ATTR_ALWAYS_INLINE static inline void dcd_event_xfer_complete (uint8_t rhport, uint8_t ep_addr, uint32_t xferred_bytes, uint8_t result, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_XFER_COMPLETE };
 
-  event.xfer_complete.ep_addr = ep_addr;
-  event.xfer_complete.len     = xferred_bytes;
-  event.xfer_complete.result  = result;
+  event.fields.xfer_complete.ep_addr = ep_addr;
+  event.fields.xfer_complete.len     = xferred_bytes;
+  event.fields.xfer_complete.result  = result;
 
   dcd_event_handler(&event, in_isr);
 }
 
 TU_ATTR_ALWAYS_INLINE static inline void dcd_event_sof(uint8_t rhport, uint32_t frame_count, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_SOF };
-  event.sof.frame_count = frame_count;
+  event.fields.sof.frame_count = frame_count;
   dcd_event_handler(&event, in_isr);
 }
 

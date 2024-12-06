@@ -588,7 +588,7 @@ void tud_task_ext(uint32_t timeout_ms, bool in_isr) {
       case DCD_EVENT_BUS_RESET:
         TU_LOG_USBD(": %s Speed\r\n", tu_str_speed[event.bus_reset.speed]);
         usbd_reset(event.rhport);
-        _usbd_dev.speed = event.bus_reset.speed;
+        _usbd_dev.speed = event.fields.bus_reset.speed;
         break;
 
       case DCD_EVENT_UNPLUGGED:
@@ -617,7 +617,7 @@ void tud_task_ext(uint32_t timeout_ms, bool in_isr) {
         _usbd_dev.ep_status[0][TUSB_DIR_IN].claimed = 0;
 
         // Process control request
-        if (!process_control_request(event.rhport, &event.setup_received)) {
+        if (!process_control_request(event.rhport, &event.fields.setup_received)) {
           TU_LOG_USBD("  Stall EP0\r\n");
           // Failed -> stall both control endpoint IN and OUT
           dcd_edpt_stall(event.rhport, 0);
@@ -627,7 +627,7 @@ void tud_task_ext(uint32_t timeout_ms, bool in_isr) {
 
       case DCD_EVENT_XFER_COMPLETE: {
         // Invoke the class callback associated with the endpoint address
-        uint8_t const ep_addr = event.xfer_complete.ep_addr;
+        uint8_t const ep_addr = event.fields.xfer_complete.ep_addr;
         uint8_t const epnum = tu_edpt_number(ep_addr);
         uint8_t const ep_dir = tu_edpt_dir(ep_addr);
 
@@ -637,14 +637,13 @@ void tud_task_ext(uint32_t timeout_ms, bool in_isr) {
         _usbd_dev.ep_status[epnum][ep_dir].claimed = 0;
 
         if (0 == epnum) {
-          usbd_control_xfer_cb(event.rhport, ep_addr, (xfer_result_t) event.xfer_complete.result,
-                               event.xfer_complete.len);
+          usbd_control_xfer_cb(event.rhport, ep_addr, (xfer_result_t) event.fields.xfer_complete.result,
+                               event.fields.xfer_complete.len);
         } else {
           usbd_class_driver_t const* driver = get_driver(_usbd_dev.ep2drv[epnum][ep_dir]);
-          TU_ASSERT(driver,);
 
           TU_LOG_USBD("  %s xfer callback\r\n", driver->name);
-          driver->xfer_cb(event.rhport, ep_addr, (xfer_result_t) event.xfer_complete.result, event.xfer_complete.len);
+          driver->xfer_cb(event.rhport, ep_addr, (xfer_result_t) event.fields.xfer_complete.result, event.fields.xfer_complete.len);
         }
         break;
       }
@@ -672,13 +671,13 @@ void tud_task_ext(uint32_t timeout_ms, bool in_isr) {
 
       case USBD_EVENT_FUNC_CALL:
         TU_LOG_USBD("\r\n");
-        if (event.func_call.func) event.func_call.func(event.func_call.param);
+        if (event.fields.func_call.func) event.fields.func_call.func(event.fields.func_call.param);
         break;
 
       case DCD_EVENT_SOF:
         if (tu_bit_test(_usbd_dev.sof_consumer, SOF_CONSUMER_USER)) {
           TU_LOG_USBD("\r\n");
-          tud_sof_cb(event.sof.frame_count);
+          tud_sof_cb(event.fields.sof.frame_count);
         }
       break;
 
@@ -1184,7 +1183,7 @@ TU_ATTR_FAST_FUNC void dcd_event_handler(dcd_event_t const* event, bool in_isr) 
       for (uint8_t i = 0; i < TOTAL_DRIVER_COUNT; i++) {
         usbd_class_driver_t const* driver = get_driver(i);
         if (driver && driver->sof) {
-          driver->sof(event->rhport, event->sof.frame_count);
+          driver->sof(event->rhport, event->fields.sof.frame_count);
         }
       }
 
@@ -1198,7 +1197,7 @@ TU_ATTR_FAST_FUNC void dcd_event_handler(dcd_event_t const* event, bool in_isr) 
       }
 
       if (tu_bit_test(_usbd_dev.sof_consumer, SOF_CONSUMER_USER)) {
-        dcd_event_t const event_sof = {.rhport = event->rhport, .event_id = DCD_EVENT_SOF, .sof.frame_count = event->sof.frame_count};
+        dcd_event_t const event_sof = {.rhport = event->rhport, .event_id = DCD_EVENT_SOF, .fields.sof.frame_count = event->fields.sof.frame_count};
         queue_event(&event_sof, in_isr);
       }
       break;
@@ -1263,8 +1262,8 @@ void usbd_defer_func(osal_task_func_t func, void* param, bool in_isr) {
       .rhport   = 0,
       .event_id = USBD_EVENT_FUNC_CALL,
   };
-  event.func_call.func  = func;
-  event.func_call.param = param;
+  event.fields.func_call.func  = func;
+  event.fields.func_call.param = param;
 
   queue_event(&event, in_isr);
 }
